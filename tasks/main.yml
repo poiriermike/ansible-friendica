@@ -1,2 +1,111 @@
 ---
 # tasks file for ansible-friendica
+
+- name: Update Apt Cache
+  apt:
+    update_cache: yes
+  # Even if the cache is updated, nothing on the system 'changed'
+  changed_when: no
+
+- name: Install Required Packages
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - apache2
+    - curl
+    - php7.0-gd
+    - libapache2-mod-php
+    - php7.0-mbstring
+    - php7.0-mcrypt
+    - php7.0-mysql
+    - php7.0-xml
+    - php7.0-zip
+
+- name: Create Friendica User
+  user:
+    name: '{{ friendica_user }}'
+    state: present
+    create_home: yes
+
+- name: Create Application Directory
+  file:
+    state: directory
+    path: '{{ app_dir }}'
+    mode: 0700
+    group: '{{ friendica_user }}'
+    owner: '{{ friendica_user }}'
+
+
+- name: Initialize the Deploy Helper Module
+  deploy_helper:
+    path: '{{ app_dir }}'
+    release: '{{ app_version }}'
+    state: present
+
+- name: Output results of deploy_helper
+  debug:
+    var: deploy_helper
+
+- name: Create Release Directory
+  file:
+    state: directory
+    path: '{{ deploy_helper.new_release_path }}'
+    mode: 0700
+    group: '{{ friendica_user }}'
+
+    owner: '{{ friendica_user }}'
+- name: Download Application Files from GitHub
+  unarchive:
+    src: 'https://github.com/friendica/friendica/releases/download/{{ app_version }}/friendica-full-{{ app_version }}.tar.gz'
+    remote_src: yes
+    dest: '{{ deploy_helper.new_release_path }}'
+    mode: 0700
+    group: '{{ friendica_user }}'
+    owner: '{{ friendica_user }}'
+  notify:
+    - Restart Apache2
+
+- name: Add Unfinished Deploy File
+  file:
+    state: touch
+    path: '{{ deploy_helper.new_release_path}}/{{ deploy_helper.unfinished_filename }}'
+    mode: 0700
+    group: '{{ friendica_user }}'
+    owner: '{{ friendica_user }}'
+  # While this file is created/deleted, it is a transient file used specifically
+  # for the deploy helper
+  changed_when: no
+
+- name: Copy Apache2 template to sites-available
+  template:
+    src: friendica.conf
+    dest: /etc/apache2/sites-available/friendica.conf
+    owner: root
+    mode: 0644
+  notify:
+    - Restart Apache2
+
+- name: Symlink Apache2 conf to sites enabled
+  file:
+    state: link
+    src: /etc/apache2/sites-available/friendica.conf
+    dest: /etc/apache2/sites-enabled/friendica.conf
+    owner: root
+    mode: 0644
+  notify:
+    - Restart Apache2
+
+- name: Finalize the Deployment
+  deploy_helper:
+    path: '{{ app_dir }}'
+    release: '{{ deploy_helper.new_release }}'
+    state: finalize
+  changed_when: deploy_helper.new_release != deploy_helper.previous_release
+
+- name: Ensure Apache2 is running
+  systemd:
+    daemon_reload: yes
+    name: apache2
+    state: started
+    enabled: yes
