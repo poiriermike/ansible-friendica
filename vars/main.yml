@@ -1,2 +1,7 @@
 ---
 # vars file for ansible-friendica
+
+app_dir: /opt/friendica
+friendica_user: friendica
+
+app_version: 3.6

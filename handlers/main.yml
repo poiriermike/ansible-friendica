@@ -1,2 +1,7 @@
 ---
 # handlers file for ansible-friendica
+
+- name: Restart Apache2
+  systemd:
+    name: apache2
+    state: restarted

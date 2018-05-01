@@ -12,3 +12,10 @@ def test_hosts_file(host):
     assert f.exists
     assert f.user == 'root'
     assert f.group == 'root'
+
+
+def test_apache_service_running(host):
+    apache = host.Service('apache2')
+
+    assert apache.started
+    assert apache.enabled
