@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import testinfra.utils.ansible_runner
 
 testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
@@ -15,7 +16,22 @@ def test_hosts_file(host):
 
 
 def test_apache_service_running(host):
-    apache = host.Service('apache2')
+    apache = host.service('apache2')
 
-    assert apache.started
-    assert apache.enabled
+    assert apache.is_running
+    assert apache.is_enabled
+
+
+@pytest.fixture(params=[
+    'apache2',
+    'curl',
+    'php7.0-gd',
+    'libapache2-mod-php',
+    'php7.0-mbstring',
+    'php7.0-mcrypt',
+    'php7.0-mysql',
+    'php7.0-xml',
+    'php7.0-zip'
+])
+def test_packages_installed(host):
+    assert host.package(host.param).is_installed
