@@ -32,7 +32,7 @@
   file:
     state: directory
     path: '{{ app_dir }}'
-    mode: 0700
+    mode: 0755
     group: '{{ friendica_user }}'
     owner: '{{ friendica_user }}'
 
@@ -51,7 +51,7 @@
   file:
     state: directory
     path: '{{ deploy_helper.new_release_path }}'
-    mode: 0700
+    mode: 0755
     group: '{{ friendica_user }}'
 
     owner: '{{ friendica_user }}'
@@ -70,7 +70,7 @@
   file:
     state: touch
     path: '{{ deploy_helper.new_release_path}}/{{ deploy_helper.unfinished_filename }}'
-    mode: 0700
+    mode: 0755
     group: '{{ friendica_user }}'
     owner: '{{ friendica_user }}'
   # While this file is created/deleted, it is a transient file used specifically
