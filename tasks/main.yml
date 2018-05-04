@@ -60,7 +60,7 @@
     src: 'https://github.com/friendica/friendica/releases/download/{{ app_version }}/friendica-full-{{ app_version }}.tar.gz'
     remote_src: yes
     dest: '{{ deploy_helper.new_release_path }}'
-    mode: 0700
+    mode: 0755
     group: '{{ friendica_user }}'
     owner: '{{ friendica_user }}'
   notify:
